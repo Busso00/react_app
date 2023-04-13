@@ -1,0 +1,44 @@
+#root {
+  text-align: left;
+  width : 100vw;
+}
+
+.navbar>*{
+  margin-left: 2vw;
+  margin-right: 2vw;
+}
+
+.container-fluid>*{
+  padding: 0.5vw 0.5vw 0.5vw 0.5vw;
+}
+
+.App-logo{
+  width: 2vw;
+  height: 2vw;
+  margin-right: 1vw;
+}
+
+.Login-logo{
+  width: 2vw;
+  height: 2vw;
+}
+
+div.container{
+  margin: 0;
+}
+
+#fav{
+  color:red;
+}
+
+input[type="checkbox"][disabled]{
+  opacity:1;
+}
+
+.hide{
+  color: white;
+}
+
+th{
+  width:25%;
+}
