@@ -23,8 +23,8 @@
   height: 2vw;
 }
 
-div.container{
-  margin: 0;
+div.row{
+  margin: 0px !important;
 }
 
 #fav{
@@ -35,8 +35,12 @@ input[type="checkbox"][disabled]{
   opacity:1;
 }
 
-.hide{
-  color: white;
+.checkbox-filter-not-hide label{
+  opacity: 1 !important;
+}
+
+.checkbox-filter-hide label{
+  opacity: 0 !important;
 }
 
 th{

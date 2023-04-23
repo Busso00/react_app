@@ -1,22 +1,11 @@
 import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css'
-import { Col, Row, Button, ListGroup, Navbar, Form, Table } from 'react-bootstrap';
+import { Col, Row, Button, ListGroup, Navbar, Form, Table, Alert } from 'react-bootstrap';
 import dayjs from 'dayjs';
-import MyButton from './Button.jsx';
 import { BsFilm, BsPersonCircle, BsStar, BsStarFill } from 'react-icons/bs';
 
 "use strict";
-/*
-const dayjs = require("dayjs");
-const sqlite=require("sqlite3");
-const db=new sqlite.Database("films.db");
-
-const dayjs = require('dayjs');
-let localizedFormat = require('dayjs/plugin/localizedFormat')
-*/
 
 dayjs().format('L LT');
 
@@ -28,9 +17,9 @@ function Film(id, title, favorites = false, date = "<not defined>", rating = "<n
   this.rating = rating;
   this.str = () => "Id: " + this.id + ", Title: " + this.title + ", Favorites: " + this.favorites + ", Watch date: " + (this.date.isValid() ? this.date.format('LL') : "<not defined>") + ", Rating: " + this.rating;
   this.html = () =>
-    <tr key={this.id}>
+    <tr key={"film-"+this.id}>
       <th id={this.favorites ? "fav" : ""}>{this.title}</th>
-      <th><Form className={this.favorites ? "" : "hide"}><Form.Check inline disabled defaultChecked={this.favorites} />Favorite</Form></th>
+      <th><Form><Form.Check className={"checkbox-filter-"+(this.favorites ? "not-hide" : "hide")}inline disabled defaultChecked={this.favorites} label="Favorite"/></Form></th>
       <th>{this.date.isValid() ? this.date.format('MMMM D, YYYY') : ""}</th>
       <th><StarRating rating={this.rating} /></th>
     </tr>
@@ -46,7 +35,10 @@ const localFile = [f1, f2, f3, f4, f5];
 
 function FilmLibrary() {
   this.films = [];
-  this.addNewFilm = (film) => this.films.push(film);
+  this.addNewFilm = (film) => {
+    this.films.push(film);
+    return this.films;
+  }
   this.print = () => [...this.films].sort((a, b) => a.id - b.id).forEach(film => console.log(film.str()));
   this.sortByDate = () => [...this.films].sort((a, b) => {
     if (a.date.isValid() && b.date.isValid())
@@ -103,13 +95,7 @@ function FilmLibrary() {
       });
     }
     else {
-      let listOfFilms = [];
-      for (let film of this.films) {
-        if (film.favorites) {
-          listOfFilms.push(film);
-        }
-      }
-      return listOfFilms;
+      return this.films.filter(film => film.favorites);
     }
   };
   this.watchedToday = () => {
@@ -166,13 +152,7 @@ function FilmLibrary() {
       });
     }
     else {
-      let listOfFilms = [];
-      for (let film of this.films) {
-        if (film.rating >= rating) {
-          listOfFilms.push(film);
-        }
-      }
-      return listOfFilms;
+      return this.films.filter((film) => film.rating >= rating);
     }
   };
   this.title = (string) => {
@@ -236,13 +216,7 @@ function FilmLibrary() {
       //TODO
     }
     else {
-      let listOfFilms = [];
-      for (let film of this.films) {
-        if (film.date.isAfter(dayjs(date))) {
-          listOfFilms.push(film);
-        }
-      }
-      return listOfFilms;
+      return this.films.filter(film => film.date.isAfter(dayjs(date)));
     }
   }
   this.unseen = () => {
@@ -256,7 +230,7 @@ function FilmLibrary() {
           listOfFilms.push(film);
         }
       }
-      return listOfFilms;
+      return this.films.filter(film => !film.date.isValid());
     }
   }
 }
@@ -265,14 +239,15 @@ function StarRating(props) {
   const rating = props.rating;
   const stars = [0, 1, 2, 3, 4].map((i) => {
     if (i < rating)
-      return <BsStarFill key={"star-"+i}/>;
+      return <BsStarFill key={"star-" + i} />;
     else
-      return <BsStar key={"star-"+i}/>;
+      return <BsStar key={"star-" + i} />;
   });
   return (
     <div id="five-star-rating">
       {stars}
-    </div>);
+    </div>
+  );
 }
 
 function ListFilter(props) {
@@ -280,15 +255,24 @@ function ListFilter(props) {
   const filters = props.filters;
   const active = props.active;
   const setActive = props.setActive;
+  const setFilms = props.setFilms;
+  const actions = props.actions;
+  const allfilms = props.allfilms;
+
+  let fl = new FilmLibrary();
+  allfilms.forEach((el) => fl.addNewFilm(el));
+
   const listItems = filters.map(
-    (filter) => <Button variant="primary" size="lg" type="button" className={"list-group-item list-group-item-action" + (active == filter ? " active" : "")} id={"list-" + filter} key={"list-"+filter} href={"#list-" + filter} onClick={() => setActive(filter)} >{filter.replaceAll('_', ' ')}</Button>
+    (filter, index) => <Button variant="primary" size="lg" type="button"
+      className={"list-group-item list-group-item-action" + (active == filter ? " active" : "")} id={"list-" + filter} key={"list-" + filter}
+      href={"#list-" + filter} onClick={() => { setActive(filter); setFilms(actions[index](fl)); }}>{filter.replaceAll('_', ' ')}</Button>
   );
   return (<ListGroup id="list-tab">{listItems}</ListGroup>);
 }
 
 function FilterTable(props) {
-  const filmList = props.filmList;
-  const filmDisplay = filmList.map((film) => film.html());
+
+  const filmDisplay = props.films.map((film) => film.html());
   return (
     <Table className="table">
       <thead>
@@ -301,13 +285,104 @@ function FilterTable(props) {
   );
 }
 
+function AddForm(props) {
+
+  const allfilms = props.allfilms;
+  const setAllfilms = props.setAllfilms;
+  const closeForm = props.closeForm;
+  const updateFilms = props.updateFilms;
+
+  const [title, setTitle] = useState(props.editObj ? props.editObj.title : '');
+  const [favorite, setFavorite] = useState(props.editObj ? props.editObj.favorite : false);
+  const [date, setDate] = useState(props.editObj ? props.editObj.date.format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'));  //string: dayjs object is created only on submit
+  const [rating, setRating] = useState(props.editObj ? props.editObj.score : 0);
+
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const [id, setId] = useState(6);//id must be unique!!! genera errori di duplicazione record
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    //console.log('premuto submit');
+
+    // Form validation
+    if (date === '')
+      setErrorMsg('Data non valida');
+    else if (isNaN(parseInt(rating)) || ((rating > 5) || (rating < 0)))
+      setErrorMsg('Rating non valido');
+    else if (title === '') {
+      setErrorMsg('Titolo non valido');
+    }
+    else {
+      const new_film = new Film(id, title, favorite, date, rating);
+      let fl = new FilmLibrary();
+      allfilms.forEach(film => fl.addNewFilm(film));
+      setAllfilms(fl.addNewFilm(new_film));//update based on preview state
+      updateFilms(fl);
+
+      setId(id => id + 1);
+      setErrorMsg('');
+    }
+  }
+
+  function handleChange(e) {
+    const isChecked = e.target.checked;
+    setFavorite(isChecked);
+  }
+
+  return (
+    <>
+      {errorMsg ? <Alert variant='danger' onClose={() => setErrorMsg('')} dismissible>{errorMsg}</Alert> : false}
+      <Form onSubmit={handleSubmit}>
+        <Row >
+          <Form.Group as={Col} className="my-3">
+            <Form.Label visuallyHidden>Title</Form.Label>
+            <Form.Control type="text" name="title" value={title} onChange={ev => setTitle(ev.target.value)} placeholder="Title" />
+
+          </Form.Group>
+
+          <Form.Group as={Col} className="my-3">
+            <Form.Check type="checkbox" id="favorite" label="Favorite" value={favorite} onChange={ev => handleChange(ev)} />
+          </Form.Group>
+
+          <Form.Group as={Col} className="my-3">
+            <Form.Label visuallyHidden>Watchdate</Form.Label>
+            <Form.Control type="date" name="watchdate" value={date} onChange={ev => setDate(ev.target.value)}/>
+
+          </Form.Group>
+
+          <Form.Group as={Col} className="my-3">
+            <Form.Label visuallyHidden>Rating</Form.Label>
+            <Form.Control type="number" name="rating" value={rating} onChange={ev => setRating(ev.target.value)}/>
+          </Form.Group>
+
+          <Button type='submit' variant="primary">Add</Button>
+          <Button variant='warning' onClick={closeForm}>Cancel</Button>
+        </Row>
+      </Form>
+    </>
+  );
+}
+
 function App() {
-  const [active, setActive] = useState('All');
+
   const fl = new FilmLibrary();
   for (let el of localFile)
     fl.addNewFilm(el);
   const filters = ['All', 'Favorites', 'Best_Rated', 'Seen_Last_Month', 'Unseen'];
-  const actions = [fl.all(), fl.favorite(), fl.rating(5), fl.seenLaterThan(dayjs().subtract(1, 'month')), fl.unseen()];
+  const actions = [
+    (fl) => fl.all(),
+    (fl) => fl.favorite(),
+    (fl) => fl.rating(5), (fl) => fl.seenLaterThan(dayjs().subtract(1, 'month')),
+    (fl) => fl.unseen(),
+    (fl, film) => fl.addNewFilm(film)//this is not indexed by left side buttons
+  ];
+  const [active, setActive] = useState(filters[0]);
+  const [films, setFilms] = useState(actions[0](fl));
+  const [allfilms, setAllfilms] = useState(fl.all());
+  const [add, setAdd] = useState(false);
+
+
   return (
     <div className="container-fluid px-0">
       <Navbar bg="primary" variant="dark" expand="lg">
@@ -326,14 +401,34 @@ function App() {
       </Navbar>
       <Row>
         <Col xs lg="3">
-          <ListFilter filters={filters} active={active} setActive={setActive} />
+          <ListFilter 
+            filters={filters/* nomi dei filtri, statico */} 
+            allfilms={allfilms/* si filtra partendo da tutti*/}
+            actions={actions/* filtri statici, varia fl(da allfilms)*/} 
+            active={active /*leggere stato per evidenziare bottone corretto */}
+            setActive={setActive/* lo stato filtro attivo deve poter essere settato al click*/}
+            setFilms={setFilms/* i film visualizzati vanno messi nello stato films */}/>
         </Col>
         <Col>
           <h1>{active.replaceAll('_', ' ')}</h1>
-          <FilterTable filmList={actions[filters.indexOf(active)]} />
-          <Button type="button" id="store" className="btn btn-primary btn-floating rounded-circle" >
-            +
-          </Button>
+          <FilterTable 
+          films={films/* filter table visualizza solo i film del filtro attivo*/}
+          />
+          <div id="addFilm">
+            {add ?
+              <AddForm
+                closeForm={() => setAdd(false)/* chiude form per add*/}
+                allfilms={allfilms/* servono i film da cui partire per fare update*/}
+                setAllfilms={setAllfilms/* funzione di update per allfilms*/}
+                updateFilms={(fl)=>setFilms(actions[filters.findIndex((el)=>el==active)](fl))}
+              /> :
+              <Button type="button" id="store" className="btn btn-primary btn-floating rounded-circle" onClick={() => setAdd(true)}>
+                +
+              </Button>
+            }
+          </div>
+
+
         </Col>
       </Row>
 
