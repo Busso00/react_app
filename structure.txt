@@ -1,0 +1,6 @@
+
+/
+    /edit :filmId
+    /add
+    /index 
+    /filter :filterId

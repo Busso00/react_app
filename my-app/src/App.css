@@ -12,15 +12,17 @@
   padding: 0.5vw 0.5vw 0.5vw 0.5vw;
 }
 
-.App-logo{
+.navbarItem{
   width: 2vw;
   height: 2vw;
+}
+
+.brand{
   margin-right: 1vw;
 }
 
-.Login-logo{
-  width: 2vw;
-  height: 2vw;
+.login{
+  color:white;
 }
 
 div.row{
