@@ -7,7 +7,7 @@ import '../App.css';
 
 function FilterTable(props) {
 
-  const filmDisplay = props.films.map(film => {
+  const filmDisplay = props.films.all().map(film => {
     return (
     <tr key={"film-" + film.id}>
       <th id={film.favorites ? "fav" : ""}>{film.title}</th>
